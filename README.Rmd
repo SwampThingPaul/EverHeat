@@ -1,0 +1,18 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# EverHeat
+
+Data and cleaned data (Exported) will not be stored in this repo due to file sizes. 
+
+Work in Progress - info to come soon. 
