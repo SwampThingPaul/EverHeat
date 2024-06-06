@@ -2,7 +2,6 @@
 ## Created by: Paul Julian (pjulian@evergladesfoundation.org)
 ## Created on: 2023-05-13
 
-
 # https://github.com/r-spatial/rgee?tab=readme-ov-file
 # library(rgeeExtra)
 library(AnalystHelper)
@@ -42,6 +41,14 @@ data(list=datalist$results[,3]);# Loads all the data in the package
 
 ENP <- subset(nps_clipped, UNIT_CODE=="EVER"); # Subsets for just ENP
 
+
+link="https://services1.arcgis.com/sDAPyc2rGRn7vf9B/arcgis/rest/services/BDWMD_Boundary_Area/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson"
+wmd=link|>
+  st_read()|>
+  st_transform(utm17)
+wmd$WMDNAME=as.factor(wmd$WMDNAME)
+
+
 # SECOORA -----------------------------------------------------------------
 ## (https://portal.secoora.org/#map)
 library(rerddap)
@@ -68,6 +75,7 @@ plot(st_geometry(ENP.sites))
 
 ENP.sites$datasetID
 
+## Commented out to avoid re-running script (takes a while to run)
 ## check period of record, number of sample days, etc
 # vars=c("time","WT")
 # site.dur=data.frame()
@@ -85,7 +93,8 @@ ENP.sites$datasetID
 #   tmp.calc=ddply(tmp.dat,c("datasetID"),summarise,minDate=min(Date),maxDate=max(Date),N.val=N.obs(WT))
 #   tmp.calc$date.Delta=with(tmp.calc,as.numeric(maxDate-minDate)/365)
 #   tmp.calc$N.datadays=nrow(tmp.calc.da)
-#   tmp.calc$scrn=with(tmp.calc,ifelse(date.Delta>=10&N.datadays>=3000,1,0));# >=10 year which would be ~3000 sample days (365*10)
+#   # >=10 year which would be ~3000 sample days (365*10)
+#   tmp.calc$scrn=with(tmp.calc,ifelse(date.Delta>=10&N.datadays>=3000,1,0));
 #   site.dur=rbind(site.dur,tmp.calc)
 #   
 #   if(tmp.calc$scrn==1){
@@ -101,7 +110,18 @@ ENP.sites$datasetID
 # write.csv(SECOORA.dat.da.ENP,paste0(export.path,"seacoora_ENP_daily.csv"),row.names=F)
 
 site.dur=read.csv(paste0(export.path,"seacoora_ENP_inventory.csv"))
-plot(sfwmd_bound)
 
-plot(st_geometry(subset(ENP.sites,datasetID%in%subset(site.dur,scrn==1)$datasetID)))
-     
+# png(filename=paste0(plot.path,"secoora_ENP_screen.png"),width=5,height=6,units="in",res=200,type="windows",bg="white")
+par(family="sans",mar=c(0.5,0.5,0.5,0.5),oma=c(0.5,0.5,0.5,0.5));
+bbox.lims=st_bbox(ENP)
+plot(st_geometry(wmd),
+     ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],
+     col="grey90",bg="lightblue",
+     border="grey",lwd=0.5)
+plot(st_geometry(sfwmd_bound),add=T,col="cornsilk",border="grey",lwd=0.5)
+plot(st_geometry(ENP),add=T,col=NA,lwd=1.5,lty=2)
+plot(st_geometry(FLAB),add=T,col=adjustcolor("lightblue3",0.5),border="white")
+plot(st_geometry(subset(ENP.sites,datasetID%in%subset(site.dur,scrn==1)$datasetID)),add=T,pch=21,bg="indianred1")
+mapmisc::scaleBar(crs=ENP,"bottomright",bty="n",cex=1,seg.len=4,outer=F)
+mtext(side=3,line=-2,"Screened SECOORA Sites")
+dev.off()
